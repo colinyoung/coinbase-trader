@@ -214,12 +214,20 @@ repl.start({
 
 // Query exchange rate before processing limits.
 setInterval(function() {
-  rest.get('https://coinbase.com/api/v1/currencies/exchange_rates').on('complete', function(data, res) {
+  rest.get('https://coinbase.com/api/v1/prices/buy').on('complete', function(data, res) {
     if (res.statusCode == 200) {
-      market.rates = data;
+      market.buy = data;
     }
   });
-}, config.coinbase.priceRefreshRate - 5000);
+}, config.coinbase.priceRefreshRate - 6000);
+
+setInterval(function() {
+  rest.get('https://coinbase.com/api/v1/prices/sell').on('complete', function(data, res) {
+    if (res.statusCode == 200) {
+      market.sell = data;
+    }
+  });
+}, config.coinbase.priceRefreshRate - 4000);
 
 // Regularly show current order status.
 setInterval(function() {
@@ -232,11 +240,12 @@ setInterval(function() {
       mm   =   d.getMinutes(),
       s   =   d.getSeconds(); 
   if (mm < 10) mm = "0" + mm;
+  if (s < 10) s = "0" + s;
   var time = m + '/' + dd + '/' + y + ' ' + h + ':' + mm + ':' + s;
 
   writeLog('');
   writeLog('--- ' + time + ' ---');
-  writeLog('=== CURRENT BTC/USD: ' + market.rates.btc_to_usd + ' ===');
+  writeLog('=== CURRENT BUY/SELL (before fees): ' + market.buy.subtotal.amount + '/' + market.sell.subtotal.amount  + ' ===');
   writeLog('=== CURRENT ORDERS ===');
 
   Object.keys(orders).forEach(function(orderID) {
@@ -245,12 +254,12 @@ setInterval(function() {
 
     // Submit limit orders if necessary
     if (order.type === 'buylimit') {
-      var rate = getRate(order.limitdenomination);
+      var rate = market.buy.subtotal.amount;
       if (rate != null && rate <= order.limit) {
         order.agent = setTimeout(function() { executeOrder(orderID); }, 1);
       }
     } else if (order.type === 'selllimit') {
-      var rate = getRate(order.limitdenomination);
+      var rate = market.sell.subtotal.amount;
       if (rate != null && rate >= order.limit) {
         order.agent = setTimeout(function() { executeOrder(orderID); }, 1);
       }
