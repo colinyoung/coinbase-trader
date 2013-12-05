@@ -28,7 +28,7 @@ writeLog(bold + 'Welcome to BitCoin Trader.' +
   '    Example: SELL 10\n\n' +
   '     Syntax: SELLLIMIT <amount> <exchangerate> <currency>\n' +
   '    Example: SELLLIMIT 10 100 USD\n\n' +
-  'If a currency is provided (USD, EUR, etc.), the order will buy as many BTC as the <amount> provides at the current exchange rates, updated once per 60 seconds.\n');
+  'If a currency is provided (USD, EUR, etc.), the order will buy as many BTC as the <amount> provides at the current exchange rates, updated once per 30 seconds.\n');
 
 repl.start({
     prompt: 'coinbase> '
@@ -220,7 +220,18 @@ setInterval(function() {
     }
   });
 
+  var d = new Date();
+  var m   =   d.getMonth() + 1,
+      dd  =   d.getDate(),
+      y   =   d.getFullYear(),
+      h   =   d.getHours(),
+      mm   =   d.getMinutes(),
+      s   =   d.getSeconds(); 
+  if (mm < 10) mm = "0" + mm;
+  var time = m + '/' + dd + '/' + y + ' ' + h + ':' + mm + ':' + s;
+
   writeLog('');
+  writeLog('--- ' + time + ' ---');
   writeLog('=== CURRENT BTC/USD: ' + market.rates.btc_to_usd + ' ===');
   writeLog('=== CURRENT ORDERS ===');
 
@@ -241,7 +252,7 @@ setInterval(function() {
       }
     }
   });
-}, 60000);
+}, 30000);
 
 function getRate(denomination) {
   var rate = market.rates[ 'btc_to_' + denomination.toLowerCase() ];
