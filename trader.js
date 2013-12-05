@@ -211,14 +211,18 @@ repl.start({
     }
 });
 
-// Regularly show current order status.
-setInterval(function() {
 
+// Query exchange rate before processing limits.
+setInterval(function() {
   rest.get('https://coinbase.com/api/v1/currencies/exchange_rates').on('complete', function(data, res) {
     if (res.statusCode == 200) {
       market.rates = data;
     }
   });
+}, config.coinbase.priceRefreshRate - 5000);
+
+// Regularly show current order status.
+setInterval(function() {
 
   var d = new Date();
   var m   =   d.getMonth() + 1,
@@ -252,7 +256,7 @@ setInterval(function() {
       }
     }
   });
-}, 30000);
+}, config.coinbase.priceRefreshRate);
 
 function getRate(denomination) {
   var rate = market.rates[ 'btc_to_' + denomination.toLowerCase() ];
